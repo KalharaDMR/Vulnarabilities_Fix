@@ -1,0 +1,186 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import PublicDashboard from "./pages/PublicDashboard";
+import ZoologistLayout from "./pages/ZoologistLayout";
+import ZoologistDashboard from "./pages/ZoologistDashboard";
+import SpeciesListPage from "./pages/zoologist/SpeciesListPage";
+import SpeciesFormPage from "./pages/zoologist/SpeciesFormPage";
+import SpeciesNearbyPage from "./pages/zoologist/SpeciesNearbyPage";
+import ZoologistProfile from "./pages/zoologist/ZoologistProfile";
+import AuthorizedDashboard from "./pages/AuthorizedDashboard";
+import AuthorizedProfile from "./pages/AuthorizedUserProfile";
+import IllegalReport from "./pages/IllegalReport";
+import MyReports from "./pages/MyReports";
+import Notifications from "./pages/Notifications";
+import PublicUserProfile from "./pages/PublicUserProfile";
+import 'leaflet/dist/leaflet.css';
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import SubmitInvestigation from "./pages/authorized/SubmitInvestigation";
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Default route */}
+        <Route path="/" element={<Home />} />
+
+        {/* Auth pages */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* PUBLIC USER DASHBOARD */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <PublicDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Alias */}
+        <Route
+          path="/public"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <PublicDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Report */}
+        <Route
+          path="/report"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <IllegalReport />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Alias for old path */}
+        <Route
+          path="/public/report"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <IllegalReport />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* My Reports */}
+        <Route
+          path="/my-reports"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <MyReports />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Alias */}
+        <Route
+          path="/public/my-reports"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <MyReports />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Notifications */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Public User Profile */}
+        <Route
+          path="/public/profile"
+          element={
+            <ProtectedRoute role="PUBLIC_USER">
+              <PublicUserProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ADMIN */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ZOOLOGIST */}
+        <Route
+          path="/zoologist"
+          element={
+            <ProtectedRoute role="ZOOLOGIST">
+              <ZoologistLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ZoologistDashboard />} />
+          <Route path="species" element={<SpeciesListPage />} />
+          <Route path="species/new" element={<SpeciesFormPage />} />
+          <Route path="species/nearby" element={<SpeciesNearbyPage />} />
+          <Route path="species/:id/edit" element={<SpeciesFormPage />} />
+          <Route path="profile" element={<ZoologistProfile />} />
+        
+        </Route>
+
+        {/* AUTHORIZED */}
+        <Route
+          path="/authorized"
+          element={
+            <ProtectedRoute role="AUTHORIZED_PERSON">
+              <AuthorizedDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/authorized/profile"
+          element={
+            <ProtectedRoute role="AUTHORIZED_PERSON">
+              <AuthorizedProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/authorized/submit-investigation/:investigationId"
+          element={
+            <ProtectedRoute role="AUTHORIZED_PERSON">
+              <SubmitInvestigation />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
