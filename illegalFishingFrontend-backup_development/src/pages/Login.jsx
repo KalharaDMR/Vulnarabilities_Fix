@@ -1,7 +1,30 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 //import axios from "axios";
 import instance from "../api/axios";
+
+const finishLogin = (data, navigate) => {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("role", data.user.role);
+  localStorage.setItem("user", JSON.stringify(data.user));
+
+  switch (data.user.role) {
+    case "ADMIN":
+      navigate("/admin");
+      break;
+    case "PUBLIC_USER":
+      navigate("/public");
+      break;
+    case "ZOOLOGIST":
+      navigate("/zoologist");
+      break;
+    case "AUTHORIZED_PERSON":
+      navigate("/authorized");
+      break;
+    default:
+      navigate("/login");
+  }
+};
 
 const inputStyle = {
   width: "100%",
@@ -48,7 +71,65 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [focusedField, setFocusedField] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [googleError, setGoogleError] = useState("");
+  const googleButtonRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setGoogleError("Google sign-in is not configured.");
+      return undefined;
+    }
+
+    const renderGoogleButton = () => {
+      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async ({ credential }) => {
+          try {
+            const response = await instance.post("/auth/google", {
+              idToken: credential,
+            });
+            finishLogin(response.data, navigate);
+          } catch (error) {
+            setGoogleError(error.response?.data?.message || "Google sign-in failed");
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rect",
+        width: String(googleButtonRef.current.offsetWidth),
+      });
+    };
+
+    const scriptUrl = "https://accounts.google.com/gsi/client";
+    let script = document.querySelector(`script[src="${scriptUrl}"]`);
+    let addedScript = false;
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+    } else if (script) {
+      script.addEventListener("load", renderGoogleButton, { once: true });
+    } else {
+      script = document.createElement("script");
+      script.src = scriptUrl;
+      script.async = true;
+      script.defer = true;
+      script.addEventListener("load", renderGoogleButton, { once: true });
+      document.head.appendChild(script);
+      addedScript = true;
+    }
+
+    return () => {
+      script?.removeEventListener("load", renderGoogleButton);
+      if (addedScript) script?.remove();
+    };
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,26 +137,7 @@ export default function Login() {
     try {
       const res = await instance.post("/auth/login", { email, password });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.user.role);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      switch (res.data.user.role) {
-        case "ADMIN":
-          navigate("/admin");
-          break;
-        case "PUBLIC_USER":
-          navigate("/public");
-          break;
-        case "ZOOLOGIST":
-          navigate("/zoologist");
-          break;
-        case "AUTHORIZED_PERSON":
-          navigate("/authorized");
-          break;
-        default:
-          navigate("/login");
-      }
+      finishLogin(res.data, navigate);
     } catch (err) {
       alert(err.response?.data?.message || "Login failed");
     }
@@ -280,6 +342,30 @@ export default function Login() {
             Sign in
           </button>
         </form>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            margin: "20px 0 12px",
+            color: "#8a96b0",
+            fontSize: "12px",
+          }}
+        >
+          <span style={{ height: "1px", flex: 1, background: "#e5e9f0" }} />
+          <span>OR</span>
+          <span style={{ height: "1px", flex: 1, background: "#e5e9f0" }} />
+        </div>
+        <div
+          ref={googleButtonRef}
+          style={{ width: "100%", minHeight: "40px", display: "flex", justifyContent: "center" }}
+        />
+        {googleError && (
+          <p role="status" style={{ margin: "8px 0 0", color: "#b42318", fontSize: "13px", textAlign: "center" }}>
+            {googleError}
+          </p>
+        )}
 
         <p
           style={{

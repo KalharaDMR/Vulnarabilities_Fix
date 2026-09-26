@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const role= require("../middlewares/role.middleware")
 
-const { signup, login, getProfile, updateProfile } = require("../controllers/auth.controller");
+const { signup, login, googleLogin, getProfile, updateProfile } = require("../controllers/auth.controller");
 const auth = require("../middlewares/auth.middleware");
 
 const router = express.Router();
@@ -105,6 +105,7 @@ router.post("/signup", upload.array("evidence"), signup);
  *                 type: string
  */
 router.post("/login", login);
+router.post("/google", googleLogin);
 router.get("/profile", auth,role("ZOOLOGIST"), getProfile);
 
 /**
