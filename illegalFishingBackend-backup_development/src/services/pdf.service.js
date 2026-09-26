@@ -1,6 +1,7 @@
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
+const { randomUUID } = require("crypto");
 
 exports.generatePDF = async (investigation) => {
   return new Promise((resolve, reject) => {
@@ -11,8 +12,21 @@ exports.generatePDF = async (investigation) => {
         fs.mkdirSync(tempDir, { recursive: true });
       }
 
-      const fileName = `investigation_${investigation._id}_${Date.now()}.pdf`;
-      const filePath = path.join(tempDir, fileName);
+      // Keep generated files inside the fixed temp directory. The filename is
+      // generated locally and never derived from request or database content.
+      const resolvedTempDir = path.resolve(tempDir);
+      const fileName = `investigation_${randomUUID()}.pdf`;
+      const filePath = path.resolve(resolvedTempDir, fileName);
+      const relativePath = path.relative(resolvedTempDir, filePath);
+
+      if (
+        !relativePath ||
+        relativePath.startsWith(`..${path.sep}`) ||
+        relativePath === ".." ||
+        path.isAbsolute(relativePath)
+      ) {
+        throw new Error("Generated report path is outside the temporary directory");
+      }
       
       const doc = new PDFDocument();
       const stream = fs.createWriteStream(filePath);
