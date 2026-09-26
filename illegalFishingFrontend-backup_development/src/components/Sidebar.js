@@ -37,7 +37,6 @@ export default function Sidebar({ role }) {
         return [
           { name: "Dashboard", path: "/admin", icon: "⬡" },
           { name: "All Users", path: "/admin/users", icon: "◈" },
-          { name: "Manage Reports", path: "/admin/reports", icon: "◉" },
           { name: "Statistics", path: "/admin/statistics", icon: "◈" },
         ];
       case "PUBLIC_USER":
@@ -89,7 +88,6 @@ export default function Sidebar({ role }) {
             path: "/authorized?open=ai-advisory",
             icon: "◎",
           },
-          { name: "Notification", path: "/authorized/enforcement", icon: "◉" },
           { name: "Profile", path: "/authorized/profile", icon: "◈" },
         ];
       default:

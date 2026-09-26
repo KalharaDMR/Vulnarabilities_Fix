@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+//import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import instance from "../api/axios"; // instead of `import axios from "axios"`
 
 const inputStyle = {
   width: "100%",
@@ -29,6 +30,32 @@ const labelStyle = {
   marginBottom: "6px",
 };
 
+const EyeIcon = ({ show }) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: "block" }}
+  >
+    {show ? (
+      <>
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </>
+    ) : (
+      <>
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+        <line x1="1" y1="1" x2="23" y2="23" />
+      </>
+    )}
+  </svg>
+);
+
 export default function Signup() {
   const navigate = useNavigate();
 
@@ -46,13 +73,14 @@ export default function Signup() {
   // ✅ FIX: Missing states (no logic change)
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [districts, setDistricts] = useState([]);
 
   // Fetch districts from backend when component mounts
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/districts");
+        const res = await instance.get("/districts");
         console.log("Fetched districts:", res.data.districts);
         setDistricts(res.data.districts);
       } catch (err) {
@@ -88,11 +116,8 @@ export default function Signup() {
     }
 
     try {
-      console.log(data)
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        data,
-      );
+      console.log(data);
+      const res = await instance.post("/auth/signup", data);
       alert(res.data.message);
       window.location.href = "/login";
     } catch (err) {
@@ -196,40 +221,95 @@ export default function Signup() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "14px" }}
+        >
           {fields.map(({ name, label, type, placeholder }) => (
             <div key={name}>
               <label style={labelStyle}>{label}</label>
-              <input
-                name={name}
-                type={type}
-                placeholder={placeholder}
-                onChange={handleChange}
-                onFocus={() => setFocusedField(name)}
-                onBlur={() => setFocusedField(null)}
-                style={{
-                  ...inputStyle,
-                  ...(focusedField === name ? focusStyle : {}),
-                }}
-                required
-              />
+              {type === "password" ? (
+                <div style={{ position: "relative" }}>
+                  <input
+                    name={name}
+                    type={showPassword ? "text" : "password"}
+                    placeholder={placeholder}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedField(name)}
+                    onBlur={() => setFocusedField(null)}
+                    style={{
+                      ...inputStyle,
+                      paddingRight: "40px",
+                      ...(focusedField === name ? focusStyle : {}),
+                    }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#8a96b0",
+                      transition: "color 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "#22d3b0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "#8a96b0";
+                    }}
+                  >
+                    <EyeIcon show={showPassword} />
+                  </button>
+                </div>
+              ) : (
+                <input
+                  name={name}
+                  type={type}
+                  placeholder={placeholder}
+                  onChange={handleChange}
+                  onFocus={() => setFocusedField(name)}
+                  onBlur={() => setFocusedField(null)}
+                  style={{
+                    ...inputStyle,
+                    ...(focusedField === name ? focusStyle : {}),
+                  }}
+                  required
+                />
+              )}
             </div>
           ))}
 
           <div>
             <label style={labelStyle}>Account type</label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
               {Object.entries(roleLabels).map(([value, label]) => (
-                <label key={value} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  padding: "10px 14px",
-                  border: `1px solid ${form.role === value ? "#22d3b0" : "#dde3ec"}`,
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  background: form.role === value ? "rgba(34,211,176,0.06)" : "#fff",
-                }}>
+                <label
+                  key={value}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "10px 14px",
+                    border: `1px solid ${form.role === value ? "#22d3b0" : "#dde3ec"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    background:
+                      form.role === value ? "rgba(34,211,176,0.06)" : "#fff",
+                  }}
+                >
                   <input
                     type="radio"
                     name="role"

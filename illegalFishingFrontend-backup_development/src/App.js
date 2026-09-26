@@ -18,7 +18,8 @@ import IllegalReport from "./pages/IllegalReport";
 import MyReports from "./pages/MyReports";
 import Notifications from "./pages/Notifications";
 import PublicUserProfile from "./pages/PublicUserProfile";
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css";
+import AdminStatistics from "./pages/AdminStatistics";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import SubmitInvestigation from "./pages/authorized/SubmitInvestigation";
@@ -133,6 +134,15 @@ function App() {
           }
         />
 
+        <Route
+          path="/admin/statistics"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminStatistics />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ZOOLOGIST */}
         <Route
           path="/zoologist"
@@ -148,7 +158,6 @@ function App() {
           <Route path="species/nearby" element={<SpeciesNearbyPage />} />
           <Route path="species/:id/edit" element={<SpeciesFormPage />} />
           <Route path="profile" element={<ZoologistProfile />} />
-        
         </Route>
 
         {/* AUTHORIZED */}
