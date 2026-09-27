@@ -1,0 +1,736 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Illegal Fishing Reporting API",
+    "version": "1.0.0",
+    "description": "REST API for Illegal Fishing Reporter with role-based user management"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Investigation": {
+        "type": "object",
+        "required": [
+          "reportId",
+          "officerId",
+          "visited",
+          "actualSituation",
+          "illegalActivityFound",
+          "actionTaken",
+          "visitDate",
+          "visitTime"
+        ],
+        "properties": {
+          "reportId": {
+            "type": "string"
+          },
+          "officerId": {
+            "type": "string"
+          },
+          "visited": {
+            "type": "boolean"
+          },
+          "actualSituation": {
+            "type": "string"
+          },
+          "illegalActivityFound": {
+            "type": "boolean"
+          },
+          "actionTaken": {
+            "type": "string",
+            "enum": [
+              "WARNING",
+              "FINE",
+              "EQUIPMENT_CONFISCATED",
+              "ARREST",
+              "NO_ACTION",
+              "OTHER"
+            ]
+          },
+          "fineAmount": {
+            "type": "number"
+          },
+          "visitDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "visitTime": {
+            "type": "string"
+          },
+          "evidenceImages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INVESTIGATING",
+              "COMPLETED",
+              "RESOLVED"
+            ]
+          }
+        }
+      },
+      "Report": {
+        "type": "object",
+        "required": [
+          "district",
+          "reportDate",
+          "reportTime",
+          "location",
+          "latitude",
+          "longitude",
+          "description"
+        ],
+        "properties": {
+          "district": {
+            "type": "string",
+            "enum": [
+              "Ampara",
+              "Anuradhapura",
+              "Badulla",
+              "Batticaloa",
+              "Colombo",
+              "Galle",
+              "Gampaha",
+              "Hambantota",
+              "Jaffna",
+              "Kalutara",
+              "Kandy",
+              "Kegalle",
+              "Kilinochchi",
+              "Kurunegala",
+              "Mannar",
+              "Matale",
+              "Matara",
+              "Monaragala",
+              "Mullaitivu",
+              "Nuwara Eliya",
+              "Polonnaruwa",
+              "Puttalam",
+              "Ratnapura",
+              "Trincomalee",
+              "Vavuniya"
+            ],
+            "description": "District where incident occurred"
+          },
+          "reportDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "reportTime": {
+            "type": "string",
+            "pattern": "^([0-1]\\d|2[0-3]):([0-5]\\d)$"
+          },
+          "location": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "evidenceFiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "INVESTIGATING",
+              "RESOLVED"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "phone",
+                  "password",
+                  "role"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "PUBLIC_USER",
+                      "ZOOLOGIST",
+                      "AUTHORIZED_PERSON"
+                    ]
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "Required only for AUTHORIZED_PERSON role. Must be a Sri Lankan district.",
+                    "enum": [
+                      "Ampara",
+                      "Anuradhapura",
+                      "Badulla",
+                      "Batticaloa",
+                      "Colombo",
+                      "Galle",
+                      "Gampaha",
+                      "Hambantota",
+                      "Jaffna",
+                      "Kalutara",
+                      "Kandy",
+                      "Kegalle",
+                      "Kilinochchi",
+                      "Kurunegala",
+                      "Mannar",
+                      "Matale",
+                      "Matara",
+                      "Monaragala",
+                      "Mullaitivu",
+                      "Nuwara Eliya",
+                      "Polonnaruwa",
+                      "Puttalam",
+                      "Ratnapura",
+                      "Trincomalee",
+                      "Vavuniya"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/auth/profile": {
+      "put": {
+        "summary": "Update user profile",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "New email address"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "New password"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "New phone number"
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "New district (only for AUTHORIZED_PERSON)",
+                    "enum": [
+                      "Ampara",
+                      "Anuradhapura",
+                      "Badulla",
+                      "Batticaloa",
+                      "Colombo",
+                      "Galle",
+                      "Gampaha",
+                      "Hambantota",
+                      "Jaffna",
+                      "Kalutara",
+                      "Kandy",
+                      "Kegalle",
+                      "Kilinochchi",
+                      "Kurunegala",
+                      "Mannar",
+                      "Matale",
+                      "Matara",
+                      "Monaragala",
+                      "Mullaitivu",
+                      "Nuwara Eliya",
+                      "Polonnaruwa",
+                      "Puttalam",
+                      "Ratnapura",
+                      "Trincomalee",
+                      "Vavuniya"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/districts": {
+      "get": {
+        "summary": "Get all Sri Lankan districts",
+        "tags": [
+          "Districts"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of districts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "districts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/zones": {
+      "post": {
+        "summary": "Create a new restricted fishing zone",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "location",
+                  "startDate",
+                  "endDate"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Anuradhapura Tissa Wewa Protection Zone"
+                  },
+                  "location": {
+                    "type": "string",
+                    "description": "JSON string format {\"lat\":8.3356,\"lng\":80.4037}"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-09-30"
+                  },
+                  "restrictedTime": {
+                    "type": "string",
+                    "example": "All Day"
+                  },
+                  "evidenceFiles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Restricted zone created successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all restricted fishing zones",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "active",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter zones by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of restricted zones"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/zones/{id}": {
+      "put": {
+        "summary": "Update an existing restricted fishing zone",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Restricted zone ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string",
+                    "description": "JSON string format {\"lat\":8.3356,\"lng\":80.4037}"
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "restrictedTime": {
+                    "type": "string"
+                  },
+                  "evidenceFiles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zone updated successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a restricted fishing zone",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Restricted zone ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Zone deleted successfully"
+          },
+          "400": {
+            "description": "Error occurred"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/zones/{id}/deactivate": {
+      "patch": {
+        "summary": "Deactivate a restricted fishing zone",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Restricted zone ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Zone deactivated successfully"
+          },
+          "400": {
+            "description": "Error occurred"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/zones/ai-advisory": {
+      "get": {
+        "summary": "Generate AI conservation advisory for all active zones",
+        "tags": [
+          "Restricted Zones"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI-generated advisory"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/reports": {
+      "post": {
+        "summary": "Create a new illegal fishing report",
+        "tags": [
+          "Reports"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "district",
+                  "reportDate",
+                  "reportTime",
+                  "location",
+                  "latitude",
+                  "longitude",
+                  "description"
+                ],
+                "properties": {
+                  "district": {
+                    "type": "string"
+                  },
+                  "reportDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "reportTime": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Restricted Zones",
+      "description": "Restricted Fishing Area Management APIs"
+    }
+  ]
+}

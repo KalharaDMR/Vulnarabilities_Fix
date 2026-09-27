@@ -1,0 +1,96 @@
+env:
+  contexts:
+    - name: local-illegal-fishing
+      urls:
+        - http://127.0.0.1:3000/
+        - http://127.0.0.1:5000/api/docs/
+      includePaths:
+        - 'http://127\.0\.0\.1:3000.*'
+        - 'http://127\.0\.0\.1:5000.*'
+      excludePaths:
+        - 'http://127\.0\.0\.1:5000/api/reports.*'
+        - 'http://127\.0\.0\.1:5000/api/investigations.*'
+        - 'http://127\.0\.0\.1:5000/api/zones.*'
+        - 'http://127\.0\.0\.1:5000/api/species.*'
+  parameters:
+    failOnError: false
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: spider
+    parameters:
+      context: local-illegal-fishing
+      url: http://127.0.0.1:3000
+      maxDuration: 3
+
+  - type: spider
+    parameters:
+      context: local-illegal-fishing
+      url: http://127.0.0.1:5000/api/docs/
+      maxDuration: 3
+
+  - type: openapi
+    parameters:
+      apiFile: zap-reports/openapi.json
+      context: local-illegal-fishing
+      targetUrl: http://127.0.0.1:5000
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 3
+
+  - type: activeScan-policy
+    parameters:
+      name: LocalHighSeverityChecks
+    policyDefinition:
+      defaultStrength: High
+      defaultThreshold: Medium
+
+  - type: activeScan
+    parameters:
+      context: local-illegal-fishing
+      url: http://127.0.0.1:5000
+      policy: LocalHighSeverityChecks
+      maxRuleDurationInMins: 1
+      maxScanDurationInMins: 10
+      delayInMs: 50
+      threadPerHost: 2
+      maxAlertsPerRule: 5
+
+  - type: activeScan
+    parameters:
+      context: local-illegal-fishing
+      url: http://127.0.0.1:3000
+      policy: LocalHighSeverityChecks
+      maxRuleDurationInMins: 1
+      maxScanDurationInMins: 10
+      delayInMs: 50
+      threadPerHost: 2
+      maxAlertsPerRule: 5
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 3
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: zap-reports
+      reportFile: zap-local-active-scan
+      reportTitle: Illegal Fishing Local ZAP Active Scan
+      reportDescription: >-
+        Authorized DAST scan against local development endpoints only. The active scan
+        used ZAP's High attack strength and Medium alert threshold. It excluded
+        report, investigation, zone, and species routes to avoid their side effects.
+      displayReport: false
+    risks:
+      - high
+      - medium
+      - low
+      - info
+    confidences:
+      - high
+      - medium
+      - low
+      - falsepositive

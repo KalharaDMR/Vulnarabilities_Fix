@@ -2,6 +2,7 @@
 const { IllegalReport } = require("../models/IllegalReport");
 const { User } = require("../models/user");
 const sendEmail = require("../utils/email.service"); // SendGrid service
+const mongoose = require("mongoose");
 
 /* =========================
    CREATE REPORT
@@ -221,6 +222,10 @@ exports.getReportStatistics = async (req, res) => {
 ========================= */
 exports.updateReport = async (req, res) => {
   try {
+    if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+      return res.status(400).json({ message: "Invalid report ID" });
+    }
+
     const report = await IllegalReport.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -236,7 +241,8 @@ exports.updateReport = async (req, res) => {
 
     res.json(report);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Report update failed:", error);
+    res.status(500).json({ message: "Failed to update report" });
   }
 };
 
@@ -245,6 +251,10 @@ exports.updateReport = async (req, res) => {
 ========================= */
 exports.deleteReport = async (req, res) => {
   try {
+    if (!mongoose.isObjectIdOrHexString(req.params.id)) {
+      return res.status(400).json({ message: "Invalid report ID" });
+    }
+
     const report = await IllegalReport.findOneAndDelete({
       _id: req.params.id,
       reporter: req.user.userId,
@@ -256,7 +266,8 @@ exports.deleteReport = async (req, res) => {
 
     res.json({ message: "Report deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Report deletion failed:", error);
+    res.status(500).json({ message: "Failed to delete report" });
   }
 };
 
