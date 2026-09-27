@@ -14,7 +14,7 @@
   "dependencies": {
     "@google/genai": "^1.42.0",
     "@sendgrid/mail": "^8.1.6",
-    "axios": "^1.13.5",
+    "axios": "^1.20.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "2.10.0",
     "cors": "^2.8.6",
@@ -32,5 +32,10 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
+  },
+  "overrides": {
+    "@google/genai": {
+      "protobufjs": "^7.6.5"
+    }
   }
 }
