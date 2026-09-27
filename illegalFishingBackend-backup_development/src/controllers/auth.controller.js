@@ -1,6 +1,9 @@
 const { User } = require("../models/user"); // Updated import
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/jwt");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.signup = async (req, res) => {
   try {
@@ -101,6 +104,70 @@ exports.login = async (req, res) => {
     res.json({
       token,
       user: userResponse,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ message: "Google ID token is required" });
+    }
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(500).json({ message: "Google authentication is not configured" });
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid Google credential" });
+    }
+
+    if (!payload?.email || !payload.email_verified || !payload.sub) {
+      return res.status(401).json({ message: "Google account email is not verified" });
+    }
+
+    let user = await User.findOne({ email: payload.email });
+    if (user?.googleId && user.googleId !== payload.sub) {
+      return res.status(401).json({ message: "Google account does not match this user" });
+    }
+
+    if (!user) {
+      user = await User.create({
+        name: payload.name || payload.email,
+        email: payload.email,
+        role: "PUBLIC_USER",
+        status: "APPROVED",
+        provider: "GOOGLE",
+        googleId: payload.sub,
+      });
+    } else {
+      if (user.status !== "APPROVED") {
+        return res.status(403).json({ message: "Account not approved yet" });
+      }
+      if (!user.googleId) {
+        user.googleId = payload.sub;
+        await user.save();
+      }
+    }
+
+    const token = generateToken(user);
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

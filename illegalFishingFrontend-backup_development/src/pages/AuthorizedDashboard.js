@@ -245,7 +245,6 @@ export default function AuthorizedDashboard() {
   };
 
   const tabs = [
-    { key: "reports", icon: IC.warning, label: "Fishing Reports" },
     { key: "areas", icon: IC.pin, label: "Restricted Areas" },
     { key: "assigned", icon: IC.clip, label: "Assigned" },
     { key: "myInvestigations", icon: IC.compass, label: "My Investigations" },
