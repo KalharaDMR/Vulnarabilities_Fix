@@ -1,0 +1,6 @@
+projectKey=Illegal-Fishing-application
+serverUrl=http://localhost:9000
+serverVersion=26.9.0.129388
+dashboardUrl=http://localhost:9000/dashboard?id=Illegal-Fishing-application
+ceTaskId=683d9c36-c516-460b-97fb-090a2f7104a5
+ceTaskUrl=http://localhost:9000/api/ce/task?id=683d9c36-c516-460b-97fb-090a2f7104a5
